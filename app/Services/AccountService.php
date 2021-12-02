@@ -32,7 +32,7 @@ class AccountService implements IAccountService
         return $loyaltyAccount->notCanceledLoyaltyPointTransactions()->sum('points_amount');
     }
 
-    private function findByType(string $type, string $id): LoyaltyAccount
+    public function findByType(string $type, string $id): LoyaltyAccount
     {
         return LoyaltyAccount::where($type, $id)->firstOrFail();
     }
