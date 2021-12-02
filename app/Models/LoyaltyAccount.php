@@ -26,6 +26,7 @@ class LoyaltyAccount extends Model
         'email', 'phone', 'card'
     ];
 
+    // TODO: remove later on when refactoring notify
     public function getBalance(): float
     {
         return LoyaltyPointsTransaction::where('canceled', '=', 0)->where('account_id', '=', $this->id)->sum('points_amount');
@@ -49,6 +50,10 @@ class LoyaltyAccount extends Model
 
     public function loyaltyPointsTransactions(): HasMany
     {
-        return $this->hasMany(LoyaltyPointsTransaction::class);
+        return $this->hasMany(LoyaltyPointsTransaction::class, 'account_id');
+    }
+
+    public function notCanceledLoyaltyPointTransactions(): HasMany {
+        return $this->loyaltyPointsTransactions()->notCanceled();
     }
 }

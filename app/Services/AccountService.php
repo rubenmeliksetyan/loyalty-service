@@ -9,16 +9,31 @@ class AccountService implements IAccountService
 {
     public function create(array $attributes): LoyaltyAccount
     {
-        // TODO: Implement create() method.
+        // TODO: assert required fields
+        $account = new LoyaltyAccount($attributes);
+        $account->save();
+        return $account;
     }
 
     public function changeStatusAndNotify(string $type, string $id, bool $status): void
     {
-        // TODO: Implement changeStatusAndNotify() method.
+        $account = $this->findByType($type, $id);
+        $account->active = $status;
+        $account->save();
+
+        // TODO: refactor later on with notifications
+        $message = $status ? 'Account restored' : 'Account banned';
+        $account->notify($message);
     }
 
     public function getBalance(string $type, string $id): float
     {
-        // TODO: Implement getBalance() method.
+        $loyaltyAccount = $this->findByType($type, $id);
+        return $loyaltyAccount->notCanceledLoyaltyPointTransactions()->sum('points_amount');
+    }
+
+    private function findByType(string $type, string $id): LoyaltyAccount
+    {
+        return LoyaltyAccount::where($type, $id)->firstOrFail();
     }
 }

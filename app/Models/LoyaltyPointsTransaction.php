@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -18,6 +19,11 @@ class LoyaltyPointsTransaction extends Model
         'payment_amount',
         'payment_time',
     ];
+
+    public function scopeNotCanceled(Builder $builder): Builder
+    {
+        return $builder->where('canceled', 0);
+    }
 
     public static function performPaymentLoyaltyPoints($account_id, $points_rule, $description, $payment_id, $payment_amount, $payment_time)
     {

@@ -2,65 +2,40 @@
 
 namespace App\Http\Controllers;
 
+use App\Interfaces\Services\IAccountService;
 use App\Models\LoyaltyAccount;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class AccountController extends Controller
 {
-    public function create(Request $request)
+    public function create(Request $request, IAccountService $service): LoyaltyAccount
     {
-        return LoyaltyAccount::create($request->all());
+        return $service->create(
+            $request->only([
+                'phone',
+                'card',
+                'email',
+                'email_notification',
+                'phone_notification'
+            ])
+        );
     }
 
-    public function activate($type, $id)
+    public function activate(string $type, string $id, IAccountService $service): JsonResponse
     {
-        if (($type == 'phone' || $type == 'card' || $type == 'email') && $id != '') {
-            if ($account = LoyaltyAccount::where($type, '=', $id)->first()) {
-                if (!$account->active) {
-                    $account->active = true;
-                    $account->save();
-                    $account->notify('Account restored');
-                }
-            } else {
-                return response()->json(['message' => 'Account is not found'], 400);
-            }
-        } else {
-            throw new \InvalidArgumentException('Wrong parameters');
-        }
-
+        $service->changeStatusAndNotify($type, $id, true);
         return response()->json(['success' => true]);
     }
 
-    public function deactivate($type, $id)
+    public function deactivate(string $type, string $id, IAccountService $service): JsonResponse
     {
-        if (($type == 'phone' || $type == 'card' || $type == 'email') && $id != '') {
-            if ($account = LoyaltyAccount::where($type, '=', $id)->first()) {
-                if ($account->active) {
-                    $account->active = false;
-                    $account->save();
-                    $account->notify('Account banned');
-                }
-            } else {
-                return response()->json(['message' => 'Account is not found'], 400);
-            }
-        } else {
-            throw new \InvalidArgumentException('Wrong parameters');
-        }
-
+        $service->changeStatusAndNotify($type, $id, false);
         return response()->json(['success' => true]);
     }
 
-    public function balance($type, $id)
+    public function balance(string $type, string $id, IAccountService $service): JsonResponse
     {
-        if (($type == 'phone' || $type == 'card' || $type == 'email') && $id != '') {
-            if ($account = LoyaltyAccount::where($type, '=', $id)->first()) {
-                return response()->json(['balance' => $account->getBalance()], 400);
-
-            } else {
-                return response()->json(['message' => 'Account is not found'], 400);
-            }
-        } else {
-            throw new \InvalidArgumentException('Wrong parameters');
-        }
+        return response()->json(['balance' => $service->getBalance($type, $id)]);
     }
 }
