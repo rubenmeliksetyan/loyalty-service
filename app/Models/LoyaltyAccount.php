@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Mail\AccountActivated;
 use App\Mail\AccountDeactivated;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
@@ -19,6 +20,10 @@ class LoyaltyAccount extends Model
         'email_notification',
         'phone_notification',
         'active',
+    ];
+
+    const ALLOWED_TYPES = [
+        'email', 'phone', 'card'
     ];
 
     public function getBalance(): float
@@ -40,5 +45,10 @@ class LoyaltyAccount extends Model
             // instead SMS component
             Log::info('Account: phone: ' . $this->phone . ' ' . ($this->active ? 'Activated' : 'Deactivated'));
         }
+    }
+
+    public function loyaltyPointsTransactions(): HasMany
+    {
+        return $this->hasMany(LoyaltyPointsTransaction::class);
     }
 }

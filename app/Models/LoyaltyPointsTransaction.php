@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class LoyaltyPointsTransaction extends Model
 {
@@ -47,5 +48,10 @@ class LoyaltyPointsTransaction extends Model
             'points_amount' => -$points_amount,
             'description' => $description,
         ]);
+    }
+
+    public function loyaltyAccount(): BelongsTo
+    {
+        return $this->belongsTo(LoyaltyAccount::class);
     }
 }
