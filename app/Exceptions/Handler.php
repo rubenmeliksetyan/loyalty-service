@@ -2,7 +2,10 @@
 
 namespace App\Exceptions;
 
+use Exception;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -37,5 +40,21 @@ class Handler extends ExceptionHandler
         $this->reportable(function (Throwable $e) {
             //
         });
+    }
+
+    public function render($request, Exception|Throwable $exception)
+    {
+        if ($request->wantsJson()) {
+            if ($exception instanceof \InvalidArgumentException) {
+                return response()->json($exception->getMessage(), 422);
+            }
+
+            if ($exception instanceof ModelNotFoundException) {
+                return response()->json('Wrong parameters', 400);
+            }
+            $retval = parent::render($request, $exception);
+        }
+
+        return $retval;
     }
 }

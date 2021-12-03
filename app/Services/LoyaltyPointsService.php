@@ -29,6 +29,7 @@ class LoyaltyPointsService implements ILoyaltyPointsService
 
     public function depositAndNotify(LoyaltyAccount $account, array $paymentAttributes): LoyaltyPointsTransaction
     {
+        // TODO: assert data service validation
         Log::info('Deposit transaction input:', ['attributes' => $paymentAttributes]);
         $pointsRule = LoyaltyPointsRule::where('points_rule', $paymentAttributes['loyalty_points_rule'] ?? '')->first();
 
