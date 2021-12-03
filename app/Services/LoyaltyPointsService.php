@@ -15,6 +15,7 @@ use App\Strategies\Parameters\CalculationStrategyParameters;
 use App\Strategies\RelativeRateCalculationStrategy;
 use App\Strategies\WithdrawAmountCalculationStrategy;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class LoyaltyPointsService implements ILoyaltyPointsService
 {
@@ -28,6 +29,7 @@ class LoyaltyPointsService implements ILoyaltyPointsService
 
     public function depositAndNotify(LoyaltyAccount $account, array $paymentAttributes): LoyaltyPointsTransaction
     {
+        Log::info('Deposit transaction input:', ['attributes' => $paymentAttributes]);
         $pointsRule = LoyaltyPointsRule::where('points_rule', $paymentAttributes['loyalty_points_rule'] ?? '')->first();
 
         $amount = $this->calculateDepositAmount($paymentAttributes['payment_amount'], $pointsRule);
@@ -41,7 +43,7 @@ class LoyaltyPointsService implements ILoyaltyPointsService
             'payment_amount' => $paymentAttributes['payment_amount'],
             'payment_time' => $paymentAttributes['payment_time'],
         ]);
-
+        Log::info('transaction is created', ['transaction' => $transaction]);
         event(new LoyaltyPointsReceived($account, $transaction));
 
         return $transaction;
@@ -57,17 +59,21 @@ class LoyaltyPointsService implements ILoyaltyPointsService
 
     public function withdraw(LoyaltyAccount $account, array $withdrawAttributes): LoyaltyPointsTransaction
     {
+        Log::info('Withdraw loyalty points transaction input: ', ['WithdrawAttributes' => $withdrawAttributes]);
         $balance = $this->accountService->getBalance('email', $account->email);
         if ($balance < $withdrawAttributes['points_amount']) {
-             throw new \Exception("Insufficient funds: " . $withdrawAttributes['points_amount']);
+            Log::info('Wrong loyalty points amount: ', ['points_amount' => $withdrawAttributes['points_amount']]);
+             throw new \InvalidArgumentException("Insufficient funds: " . $withdrawAttributes['points_amount']);
         }
         $amount = $this->getWithdrawAmount($withdrawAttributes['points_amount']);
-        return LoyaltyPointsTransaction::create([
+        $transaction = LoyaltyPointsTransaction::create([
             'account_id' => $account->id,
             'points_rule' => LoyaltyPointsRule::WITHDRAW,
             'points_amount' => $amount,
             'description' => $withdrawAttributes['description'],
         ]);
+        Log::info('transaction created', ['transaction' => $transaction]);
+        return $transaction;
     }
 
     private function calculateDepositAmount(float $amount, LoyaltyPointsRule $rule = null): float {

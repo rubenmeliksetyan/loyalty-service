@@ -8,7 +8,6 @@ use App\Http\Requests\Transaction\WithdrawRequest;
 use App\Interfaces\Services\IAccountService;
 use App\Interfaces\Services\ILoyaltyPointsService;
 use App\Models\LoyaltyPointsTransaction;
-use Illuminate\Http\Request;
 
 class LoyaltyPointsController extends Controller
 {
@@ -18,7 +17,6 @@ class LoyaltyPointsController extends Controller
         IAccountService $accountService
     ): LoyaltyPointsTransaction
     {
-        // TODO: add scope to acount and select active account
         $account = $accountService->findByType($request->input('account_type'), $request->input('account_id'));
         return $loyaltyPointsService->depositAndNotify(
             $account,
