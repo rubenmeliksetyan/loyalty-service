@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Events\AccountActivated;
+use App\Events\AccountDeactivated;
 use App\Interfaces\Services\IAccountService;
 use App\Models\LoyaltyAccount;
 
@@ -20,10 +22,7 @@ class AccountService implements IAccountService
         $account = $this->findByType($type, $id);
         $account->active = $status;
         $account->save();
-
-        // TODO: refactor later on with notifications
-        $message = $status ? 'Account restored' : 'Account banned';
-        $account->notify($message);
+        event($status ? new AccountActivated($account) : new AccountDeactivated($account));
     }
 
     public function getBalance(string $type, string $id): float
@@ -34,6 +33,6 @@ class AccountService implements IAccountService
 
     public function findByType(string $type, string $id): LoyaltyAccount
     {
-        return LoyaltyAccount::where($type, $id)->firstOrFail();
+        return LoyaltyAccount::where($type, $id)->where('active', 1)->firstOrFail();
     }
 }

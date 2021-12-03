@@ -26,28 +26,6 @@ class LoyaltyAccount extends Model
         'email', 'phone', 'card'
     ];
 
-    // TODO: remove later on when refactoring notify
-    public function getBalance(): float
-    {
-        return LoyaltyPointsTransaction::where('canceled', '=', 0)->where('account_id', '=', $this->id)->sum('points_amount');
-    }
-
-    public function notify()
-    {
-        if ($this->email != '' && $this->email_notification) {
-            if ($this->active) {
-                Mail::to($this)->send(new AccountActivated($this->getBalance()));
-            } else {
-                Mail::to($this)->send(new AccountDeactivated());
-            }
-        }
-
-        if ($this->phone != '' && $this->phone_notification) {
-            // instead SMS component
-            Log::info('Account: phone: ' . $this->phone . ' ' . ($this->active ? 'Activated' : 'Deactivated'));
-        }
-    }
-
     public function loyaltyPointsTransactions(): HasMany
     {
         return $this->hasMany(LoyaltyPointsTransaction::class, 'account_id');

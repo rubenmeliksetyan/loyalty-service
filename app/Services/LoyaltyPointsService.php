@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\LoyaltyPointsReceived;
 use App\Interfaces\Services\IAccountService;
 use App\Interfaces\Services\ILoyaltyPointsService;
 use App\Models\LoyaltyAccount;
@@ -41,7 +42,7 @@ class LoyaltyPointsService implements ILoyaltyPointsService
             'payment_time' => $paymentAttributes['payment_time'],
         ]);
 
-        // TODO: notify
+        event(new LoyaltyPointsReceived($account, $transaction));
 
         return $transaction;
     }
@@ -57,6 +58,9 @@ class LoyaltyPointsService implements ILoyaltyPointsService
     public function withdraw(LoyaltyAccount $account, array $withdrawAttributes): LoyaltyPointsTransaction
     {
         $balance = $this->accountService->getBalance('email', $account->email);
+        if ($balance < $withdrawAttributes['points_amount']) {
+             throw new \Exception("Insufficient funds: " . $withdrawAttributes['points_amount']);
+        }
         $amount = $this->getWithdrawAmount($withdrawAttributes['points_amount']);
         return LoyaltyPointsTransaction::create([
             'account_id' => $account->id,
