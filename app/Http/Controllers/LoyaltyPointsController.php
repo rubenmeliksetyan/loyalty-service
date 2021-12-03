@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Transaction\CancelRequest;
+use App\Http\Requests\Transaction\DepositRequest;
+use App\Http\Requests\Transaction\WithdrawRequest;
 use App\Interfaces\Services\IAccountService;
 use App\Interfaces\Services\ILoyaltyPointsService;
 use App\Models\LoyaltyPointsTransaction;
@@ -10,7 +13,7 @@ use Illuminate\Http\Request;
 class LoyaltyPointsController extends Controller
 {
     public function deposit(
-        Request $request,
+        DepositRequest $request,
         ILoyaltyPointsService $loyaltyPointsService,
         IAccountService $accountService
     ): LoyaltyPointsTransaction
@@ -29,7 +32,7 @@ class LoyaltyPointsController extends Controller
         );
     }
 
-    public function cancel(Request $request, ILoyaltyPointsService $loyaltyPointsService)
+    public function cancel(CancelRequest $request, ILoyaltyPointsService $loyaltyPointsService)
     {
         $loyaltyPointsService->cancelTransaction(
             $request->input('transaction_id'),
@@ -38,7 +41,7 @@ class LoyaltyPointsController extends Controller
     }
 
     public function withdraw(
-        Request $request,
+        WithdrawRequest $request,
         ILoyaltyPointsService $loyaltyPointsService,
         IAccountService $accountService
     ): LoyaltyPointsTransaction
