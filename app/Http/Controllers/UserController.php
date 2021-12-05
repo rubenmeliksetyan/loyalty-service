@@ -2,35 +2,30 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
+use App\Http\Requests\User\CreateRequest;
+use App\Http\Requests\User\LoginRequest;
+use App\Interfaces\Services\IUserService;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller
 {
-    public function register(Request $request)
+    public function register(CreateRequest $request, IUserService $service): JsonResponse
     {
-        $data = $request->all();
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-        ]);
-        return response()->json(['user' => $user, 'token' => $user->createToken('apiToken')->plainTextToken], 201);
+        $user = $service->createUser($request->only('name', 'email', 'password'));
+        return response()->json(['user' => $user, 'token' => $service->generateToken($user)], 201);
     }
 
-    public function login(Request $request)
+    public function login(LoginRequest $request, IUserService $service): JsonResponse
     {
-        $data = $request->all();
-        $user = User::where('email', $data['email'])->first();
-
-        if ($user && Hash::check($data['password'], $user->password)) {
-            $token = $user->createToken('apiToken')->plainTextToken;
-        } else {
+        try {
+            $user = $service->login($request->input('email'), $request->input('password'));
+            return response()->json(['user' => $user, 'token' => $service->generateToken($user)], 201);
+        } catch (ModelNotFoundException $exception) {
             return response()->json(['message' => 'Bad credentials'], 401);
         }
-
-        return response()->json(['user' => $user, 'token' => $token], 201);
     }
 
     public function logout(Request $request)
