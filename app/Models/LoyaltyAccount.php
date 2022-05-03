@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Mail\AccountActivated;
 use App\Mail\AccountDeactivated;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
@@ -21,24 +22,16 @@ class LoyaltyAccount extends Model
         'active',
     ];
 
-    public function getBalance(): float
+    const ALLOWED_TYPES = [
+        'email', 'phone', 'card'
+    ];
+
+    public function loyaltyPointsTransactions(): HasMany
     {
-        return LoyaltyPointsTransaction::where('canceled', '=', 0)->where('account_id', '=', $this->id)->sum('points_amount');
+        return $this->hasMany(LoyaltyPointsTransaction::class, 'account_id');
     }
 
-    public function notify()
-    {
-        if ($this->email != '' && $this->email_notification) {
-            if ($this->active) {
-                Mail::to($this)->send(new AccountActivated($this->getBalance()));
-            } else {
-                Mail::to($this)->send(new AccountDeactivated());
-            }
-        }
-
-        if ($this->phone != '' && $this->phone_notification) {
-            // instead SMS component
-            Log::info('Account: phone: ' . $this->phone . ' ' . ($this->active ? 'Activated' : 'Deactivated'));
-        }
+    public function notCanceledLoyaltyPointTransactions(): HasMany {
+        return $this->loyaltyPointsTransactions()->notCanceled();
     }
 }
